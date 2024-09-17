@@ -11,8 +11,7 @@ app.secret_key = 'ds=-docODWDo;=-ewqdkw0=1e3'
 @app.route('/')
 def index():
     # Проверяем, существует ли уже userspace в сессии, если нет - генерируем
-    userspace = session['userspace']
-    return render_template('index.html', userspace=userspace)
+    return render_template('index.html')
 
 
 @app.route('/upload', methods=['POST'])
@@ -51,11 +50,21 @@ def upload_file():
 
         # Запуск внешнего скрипта taudit2.exe в отдельном процессе
         try:
-            command = [r'D:\main\develop\audit2\venv\Scripts\taudit2.exe', '--pathd', pathd]
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            command = [app.config['LIB_TAUDIT2_FIOLDER'], '--pathd', pathd]
+            process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Объединяем stderr с stdout
+                text=True,
+                bufsize=1,
+                universal_newlines=True
+            )
 
-            # Дождаться завершения процесса
+            for line in process.stdout:
+                print(line, end='')
+
             process.wait()
+            print("_____________________все завершилось_____________________")
 
             # Найдем лог-файл в папке userspace
             log_file = None
